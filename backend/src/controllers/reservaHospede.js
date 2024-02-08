@@ -1,6 +1,6 @@
 const database = require('../database/index');
 
-exports.post = async (req, res, next) => {
+exports.createOrUpdate = async (req, res, next) => {
     if (!req.body) {
         return res.status(400).send('Invalid body')
     }
@@ -12,71 +12,232 @@ exports.post = async (req, res, next) => {
     if (!save) {
         return res.status(500).send("error")
     } else {
+        await tirarHospedesDaRelação(save.reservas, save.id)
         return res.status(200).send('reservado com sucesso')
     }
 };
-exports.put = (req, res, next) => {
-    let id = req.params.id;
-    res.status(201).send(`Requisição recebida com sucesso! ${id}`);
-};
 exports.delete = (req, res, next) => {
     let id = req.params.id;
-    res.status(200).send(`Requisição recebida com sucesso! ${id}`);
+    const { error: erroRelacao } = database
+        .from('reserva_hospede')
+        .delete()
+        .eq('idreserva', id)
+    const { error: erroReserva } = database
+        .from('tb_reservas')
+        .delete()
+        .eq('id', id)
+    if (!erroRelacao && !erroReserva) {
+        res.status(200).send(`Reserva apagada com sucesso`);
+    }
 };
-exports.getOne = (req, res, next) => {
+exports.getOne = async (req, res, next) => {
     let id = req.params.id;
-    res.status(200).send(`Requisição recebida'em! ${id}`);
+    const resposta = await buscarReservaEHospedes(id)
+    res.status(200).send(resposta);
 }
-exports.get = (req, res, next) => {
-    let id = req.params.id;
-    res.status(200).send(`Requisição recebida'em! ${id}`);
+exports.get = async (req, res, next) => {
+    const { data: reservas } = await database
+        .from('tb_reservas')
+        .select()
+    res.status(200).send(reservas);
+}
+exports.getByHotel = async (req, res, next) => {
+    let id = req.params.id
+    const { data: reservas } = await database
+        .from('tb_reservas')
+        .select()
+        .eq('idhotel', id)
+    res.status(200).send(reservas);
 }
 
-async function salvarReservaEDetalhes(data) {
+// functions
+
+async function salvarReservaEDetalhes(reserva) {
+    let novaReservaId = ''
+    let reservas = []
     try {
-        // Inserir hóspedes na tb_hospedes se não existirem
-        const hospedes = data.hospedes;
-        hospedes.map((hospede) => {
-            const hospedeData = {
-                nome: hospede.nome,
-                sobrenome: hospede.sobrenome,
-            }
-            const { data, error } = database
-                .from('tb_hospedes')
-                .select()
-                .eq('id', hospede.hospedeid)
-            if (error) {
-                console.log(error)
+        const novaReserva = await atualizarOuCriarReserva({
+            numeroreserva: reserva.numeroreserva,
+            idhotel: reserva.idhotel,
+            status: reserva.status,
+            datacheckin: reserva.datacheckin,
+            datacheckout: reserva.datacheckout,
+            apartamento: reserva.apartamento,
+        })
+        novaReservaId = novaReserva.id
+        let hospedeData = {}
+        await reserva.hospedes.map(async (hospede) => {
+            try {
+                hospedeData = await atualizarOuCriarHospedes(hospede);
+            } catch {
+                return false
+            } finally {
+                try {
+                    reservas.push(await criarRelacaoReservaHospede(novaReserva.id, hospedeData.idhospede))
+                } catch { return false } finally {
+                    return true;
+                }
             }
         })
-
-        // Inserir detalhes da reserva na tb_reservas
-        const reservaData = {
-            idhotel: data.idhotel,
-            numeroreserva: data.numeroreserva,
-            apartamento: data.apartamento,
-            datacheckin: data.datacheckin,
-            datacheckout: data.datacheckout || '',
-            status: data.status
-        };
-        const { data: reserva, error: reservaError } = await database
-            .from('tb_reservas')
-            .upsert(reservaData)
-            .single();
-        if (reservaError) throw reservaError;
-
-        // Criar relações entre reserva e hóspedes na tb_reservas_hospedes
-        const reservaHospedesData = hospedes.map(hospede => ({
-            idreserva: reserva.id,
-            idhospede: hospede.idhospede
-        }));
-        await database.from('reservas_hospedes').insert(reservaHospedesData);
-
-        console.log('Reserva e detalhes salvos com sucesso!');
-        return true
-    } catch (error) {
-        console.error('Erro ao salvar reserva e detalhes:', error.message);
-        return false;
+    } catch {
+        return false
+    } finally {
+        return { reservas, id: novaReservaId }
     }
+}
 
+async function atualizarOuCriarHospedes(hospede) {
+    if (await dataExist('tb_hospedes', hospede.idhospede, 'idhospede')) {
+        const { data, error } = await database
+            .from('tb_hospedes')
+            .update({ nome: hospede.nome, sobrenome: hospede.sobrenome })
+            .eq('idhospede', hospede.idhospede)
+            .select()
+        if (data) {
+            return data[0]
+        }
+        if (error) {
+            console.log('hospedes erro', error)
+            return false
+        }
+    } else {
+        const { data, error } = await database
+            .from('tb_hospedes')
+            .insert({ nome: hospede.nome, sobrenome: hospede.sobrenome })
+            .select()
+        if (data) {
+            return data[0]
+        }
+        if (error) {
+            console.log('hospedes erro', error)
+            return false
+        }
+    }
+}
+
+async function atualizarOuCriarReserva(reserva) {
+    if (await dataExist('tb_reservas', reserva.numeroreserva, 'numeroreserva')) {
+        const { data, error } = await database
+            .from('tb_reservas')
+            .update(reserva)
+            .eq('numeroreserva', reserva.numeroreserva)
+            .select()
+        if (data) {
+            return data[0]
+        }
+        if (error) {
+            console.log('reserva erro', error)
+            return false
+        }
+    } else {
+        const { data, error } = await database
+            .from('tb_reservas')
+            .insert(reserva)
+            .select()
+        if (data) {
+            return data[0]
+        }
+        if (error) {
+            console.log('reserva erro', error)
+            return false
+        }
+    }
+}
+
+async function criarRelacaoReservaHospede(idreserva, idhospede) {
+    const prevRelation = await relationExists(idreserva, idhospede)
+    if (!prevRelation) {
+        const { data, error } = await database
+            .from('reserva_hospede')
+            .insert({ idhospede, idreserva })
+            .select()
+        if (data) return data
+        if (error) {
+            console.log('relação erro', error)
+            return false
+        }
+    } else return prevRelation
+}
+
+async function tirarHospedesDaRelação(novasReservas, idreserva) {
+    const { data: reservas, error } = await database
+        .from('reserva_hospede')
+        .select()
+        .eq('idreserva', idreserva)
+
+    if (error) return error
+    const reservasVelhas = reservas.filter(reserva => {
+        return !novasReservas.some(novaReserva =>
+            novaReserva.idhospede === reserva.idhospede &&
+            novaReserva.idreserva === reserva.idreserva
+        );
+    });
+    try {
+        reservasVelhas.map(async (reserva) => {
+            const { error } = await database
+                .from('reserva_hospede')
+                .delete()
+                .eq('idhospede', reserva.idhospede)
+                .eq('idreserva', reserva.idreserva)
+            if (error) console.log(error)
+        })
+    } catch (e) {
+        console.log(e)
+    }
+}
+
+async function dataExist(from, key, keyType) {
+    const { data, error } = await database
+        .from(from)
+        .select()
+        .eq(keyType, key)
+
+    if (error || data.length === 0) {
+        console.log('dados não exitem em ' + from)
+        return false
+    }
+    else {
+        console.log('dados encontrados em ' + from)
+        return data
+    }
+}
+
+async function relationExists(idreserva, idhospede) {
+    const { data, error } = await database
+        .from('reserva_hospede')
+        .select()
+        .eq('idhospede', idhospede)
+        .eq('idreserva', idreserva)
+
+    if (error || data.length == 0) {
+        console.log('relação não encontrada')
+        return false
+    }
+    else {
+        console.log('relação encontrada')
+        return data[0]
+    }
+}
+
+async function buscarReservaEHospedes(id) {
+    try {
+        const reservas_hospedes = await dataExist('reserva_hospede', id, 'idreserva')
+        const reserva = await dataExist('tb_reservas', id, 'id');
+        let hospedesPromises = reservas_hospedes.map(async (relation) => {
+            let hospede = await dataExist('tb_hospedes', relation.idhospede, 'idhospede')
+            return ({ idhospede: hospede[0].idhospede, nome: hospede[0].nome, sobrenome: hospede[0].sobrenome })
+        })
+        const hospedes = await Promise.all(hospedesPromises)
+        return {
+            idhotel: reserva[0].idhotel,
+            numeroreserva: parseInt(reserva[0].numeroreserva) || reserva[0].numeroreserva,
+            apartamento: parseInt(reserva[0].apartamento) || reserva[0].apartamento,
+            datacheckin: reserva[0].datacheckin,
+            datacheckout: reserva[0].datacheckout,
+            status: parseInt(reserva[0].status) || reserva[0].status,
+            hospedes: hospedes,
+        }
+    } catch (e) {
+        console.log(e)
+    }
 }
