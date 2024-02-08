@@ -1,9 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
-import AboutView from '../views/AboutView.vue'
-import RegisterView from '../views/RegisterView.vue'
+import RegisterHotelView from '../views/RegisterHotelView.vue'
 import NotFound from '../components/NotFound.vue'
-import { supabase } from '@/clients/supabase'
+import ReservaView from '@/views/ReservaView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,26 +13,15 @@ const router = createRouter({
       component: HomeView
     },
     {
-      path: '/about',
-      name: 'about',
-      component: AboutView
-    },
-    {
-      path: '/register',
+      path: '/registrarHotel',
       name: 'register',
-      component: RegisterView,
+      component: RegisterHotelView,
 
     },
     {
-      path: '/login',
-      name: 'login',
-      component: () => import('../views/LoginView.vue')
-    },
-    {
-      path: '/dashboard',
-      name: 'dashboard',
-      component: () => import('../views/DashboardView.vue'),
-      meta: { requiresAuth: true }
+      path: '/reservas',
+      name: 'reservas',
+      component: ReservaView
     },
     {
       path: '/unauthorized',
@@ -46,12 +34,7 @@ const router = createRouter({
 })
 
 async function getUser(next: any) {
-  const localUser = await supabase.auth.getSession()
-  if (localUser.data.session == null) {
-    next('/unauthorized')
-  } else {
-    next()
-  }
+  next()
 }
 
 router.beforeEach((to, from, next) => {
