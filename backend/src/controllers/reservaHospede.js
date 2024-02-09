@@ -16,18 +16,13 @@ exports.createOrUpdate = async (req, res, next) => {
         return res.status(200).send('reservado com sucesso')
     }
 };
-exports.delete = (req, res, next) => {
+exports.delete = async (req, res, next) => {
     let id = req.params.id;
-    const { error: erroRelacao } = database
-        .from('reserva_hospede')
-        .delete()
-        .eq('idreserva', id)
-    const { error: erroReserva } = database
-        .from('tb_reservas')
-        .delete()
-        .eq('id', id)
-    if (!erroRelacao && !erroReserva) {
+    const deleteReserva = await this.deleteReservas(id)
+    if (deleteReserva) {
         res.status(200).send(`Reserva apagada com sucesso`);
+    } else {
+        res.status(400).send('erro ao apagar')
     }
 };
 exports.getOne = async (req, res, next) => {
@@ -52,6 +47,23 @@ exports.getByHotel = async (req, res, next) => {
 
 // functions
 
+exports.deleteReservas = async (id) => {
+    const { error: erroRelacao } = await database
+        .from('reserva_hospede')
+        .delete()
+        .eq('idreserva', id)
+    if (!erroRelacao) {
+        console.log('relações apagadas')
+        const { error: erroReserva } = await database
+            .from('tb_reservas')
+            .delete()
+            .eq('id', id)
+        if (!erroReserva) {
+            return true
+        }
+    }
+    return false
+}
 async function salvarReservaEDetalhes(reserva) {
     let novaReservaId = ''
     let reservas = []
