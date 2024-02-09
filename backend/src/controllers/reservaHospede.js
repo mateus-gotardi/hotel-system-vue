@@ -53,7 +53,6 @@ exports.deleteReservas = async (id) => {
         .delete()
         .eq('idreserva', id)
     if (!erroRelacao) {
-        console.log('relações apagadas')
         const { error: erroReserva } = await database
             .from('tb_reservas')
             .delete()
@@ -205,11 +204,9 @@ async function dataExist(from, key, keyType) {
         .eq(keyType, key)
 
     if (error || data.length === 0) {
-        console.log('dados não exitem em ' + from)
         return false
     }
     else {
-        console.log('dados encontrados em ' + from)
         return data
     }
 }
@@ -222,11 +219,9 @@ async function relationExists(idreserva, idhospede) {
         .eq('idreserva', idreserva)
 
     if (error || data.length == 0) {
-        console.log('relação não encontrada')
         return false
     }
     else {
-        console.log('relação encontrada')
         return data[0]
     }
 }

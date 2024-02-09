@@ -1,65 +1,78 @@
 <template>
   <div class="container">
     <h1>Cadastrar reserva</h1>
-    <h2>Escolher hotel</h2>
-    <h3 v-if="selected.id !== ''">Hotel selecionado: {{ selected.nome }}</h3>
+    <h3 v-if="hotelStore.hotel.id !== ''">Hotel selecionado: {{ hotelStore.hotel.nome }}</h3>
+    <h3 v-if="hotelStore.hotel.id === ''">Escolher hotel</h3>
     <ul class="hotel-list">
-      <li v-for="hotel in hoteis" :key="hotel.id" class="listItem">
+      <li v-for="hotel in hotelStore.hoteis" :key="hotel.id" class="listItem">
         <HotelListButton @click="handleSelect(hotel)">
-          nome: {{ hotel.nome }} - {{ hotel.cidade }}, {{ hotel.pais }}
+          {{ hotel.nome }} - {{ hotel.cidade }}, {{ hotel.pais }}
         </HotelListButton>
       </li>
     </ul>
+    <div class="reservas-lista" v-if="hotelStore.hotel.id !== ''">
+      <div class="reservasHead"><button @click="reservaStore.abrirModal()">+</button></div>
+      <div v-for="(reserva, index) in reservaStore.reservas" :key="index" class="reserva-detalhes">
+        <div class="reserva-buttons"></div>
+        <button @click="selectReserva(reserva)">
+          Editar
+        </button>
+        <button>
+          Apagar
+        </button>
+        <p>numero reserva: {{ reserva.numeroreserva }}</p>
+        <p>status: {{ reserva.status }}</p>
+        <p>apartamento: {{ reserva.apartamento }}</p>
+        <p>check in: {{ reserva.datacheckin }}</p>
+        <p v-if="reserva.datacheckout && reserva.datacheckout !== ''">check out: {{ reserva.datacheckout }}</p>
+        <p v-if="hotelStore.hotel.id == ''">Hotel: {{ reserva.idhotel }}</p>
+      </div>
+    </div>
+    <FormularioReserva v-if="reservaStore.reservaModal" />
   </div>
 </template>
 <script lang="ts">
-import api from '@/api';
-import type { HotelBody } from '@/types/hotel';
+import type { IHotel } from '@/types/hotel';
 import { defineComponent } from 'vue'
 import HotelListButton from '../components/HotelListButton.vue'
+import { useHotelStore } from '@/stores/hotel';
+import FormularioReserva from '@/components/FormularioReserva.vue';
+import { useReservaStore } from '@/stores/reserva';
+import type { Reserva } from '@/types/reserva';
 
-interface Hotel extends HotelBody {
-  id: string;
-}
+
 export default defineComponent({
+
   data() {
-    const hoteis: Hotel[] = []
-    let selected: Hotel = {
-      id: '',
-      nome: '',
-      cidade: '',
-      estado: '',
-      cnpj: '',
-      pais: '',
-    }
+    const hotelStore = useHotelStore()
+    const reservaStore = useReservaStore()
     return {
-      hoteis,
-      selected,
+      hotelStore,
+      reservaStore,
     }
   },
   components: {
-    HotelListButton
+    HotelListButton,
+    FormularioReserva
   },
   mounted() {
-    this.fetchHoteis()
+    this.hotelStore.fetchHoteis()
+    this.reservaStore.fetchReservas()
+    this.reservaStore.fecharModal()
   },
   methods: {
-    async fetchHoteis() {
-      this.hoteis = (await api.hotel.getAll()).data
-    },
-    handleSelect(value: Hotel) {
-      if (value == this.selected) {
-        this.selected = {
-          id: '',
-          nome: '',
-          cidade: '',
-          estado: '',
-          cnpj: '',
-          pais: '',
-        }
+    handleSelect(value: IHotel) {
+      if (value == this.hotelStore.hotel) {
+        this.hotelStore.deselectHotel()
+        this.reservaStore.fetchReservas()
         return
       }
-      this.selected = value
+      this.hotelStore.selectHotel(value)
+      this.reservaStore.fetchReservas(value.id)
+    },
+    selectReserva(reserva: Reserva) {
+      this.reservaStore.fetchReservaDetails(reserva.id)
+      this.reservaStore.abrirModal()
     }
   }
 })
@@ -69,7 +82,6 @@ export default defineComponent({
 <style>
 @media (min-width: 1024px) {
   .container {
-    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;

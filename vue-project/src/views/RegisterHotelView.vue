@@ -3,24 +3,25 @@
         <h1>Registrar Hotel</h1>
         <div class="inputContainer">
             <label for="name">Nome</label>
-            <input type="text" placeholder="Nome" v-model="nome" />
+            <input required type="text" placeholder="Nome" v-model="nome" />
         </div>
         <div class="inputContainer">
             <label for="cnpj">CNPJ</label>
-            <input type="cnpj" placeholder="cnpj" v-model="cnpj" />
+            <input required type="cnpj" placeholder="cnpj" v-model="cnpj" />
         </div>
         <div class="inputContainer">
             <label for="pais">Pais</label>
-            <input type="text" placeholder="Pais" v-model="pais" />
+            <input required type="text" placeholder="Pais" v-model="pais" />
         </div>
         <div class="inputContainer">
             <label for="estado">Estado</label>
-            <input type="text" placeholder="Estado" v-model="estado" />
+            <input required type="text" placeholder="Estado" v-model="estado" />
         </div>
         <div class="inputContainer">
             <label for="pais">Cidade</label>
-            <input type="text" placeholder="Cidade" v-model="cidade" />
+            <input required type="text" placeholder="Cidade" v-model="cidade" />
         </div>
+        <p class="error" v-if="error !== ''">{{ error }}</p>
         <div class="buttonContainer">
             <button @click="registerHotel">Registrar</button>
         </div>
@@ -31,6 +32,8 @@
 import { ref } from 'vue'
 import api from '../api'
 
+let error = ref('')
+
 let cnpj = ref('')
 let pais = ref('')
 let estado = ref('')
@@ -38,19 +41,37 @@ let cidade = ref('')
 let nome = ref('')
 
 async function registerHotel() {
-    const hotel = await api.hotel.create({
-        nome: nome.value,
-        cnpj: cnpj.value,
-        cidade: cidade.value,
-        estado: estado.value,
-        pais: pais.value,
-    })
-    console.log(hotel)
+    if (cnpj.value == '' || pais.value == '' || estado.value == '' || cidade.value == '' || nome.value == '') {
+        error.value = 'Todos os campos são obrigatórios';
+        return
+    }
+    try {
+        const hotel = await api.hotel.create({
+            nome: nome.value,
+            cnpj: cnpj.value,
+            cidade: cidade.value,
+            estado: estado.value,
+            pais: pais.value,
+        })
+        if (hotel.status == 200) {
+            console.log(hotel.data)
+        }
+    } catch (e: any) {
+        console.log('erro')
+        console.log(e.response.data.message)
+        error.value = e.response.data.message
+    }
 }
 
 </script>
-  
+
 <style>
+.error {
+    color: red;
+    padding: 0;
+    margin: 0;
+}
+
 @media (min-width: 1024px) {
     .register {
         min-height: 100vh;

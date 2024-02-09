@@ -1,12 +1,12 @@
 import type { AxiosInstance } from "axios";
-import type { HotelBody } from "@/types/hotel";
+import type { HotelBody, IHotel } from "@/types/hotel";
 
 export class Hotel {
     constructor(
         private readonly http: AxiosInstance,
     ) { }
-    public async getAll<T = any>() {
-        return this.http.get<T>(`/buscarHotel`)
+    public async getAll<T = Hotel>() {
+        return this.http.get<T[]>(`/buscarHotel`)
     }
     public async getOne<T = any>(id: string) {
         return this.http.get<T>(`/buscarHotel/${id}`)

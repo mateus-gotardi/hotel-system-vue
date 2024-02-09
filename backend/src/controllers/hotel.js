@@ -7,7 +7,7 @@ exports.post = async (req, res, next) => {
     }
     const { nome, cnpj, pais, estado, cidade } = req.body
     if (!nome || !cnpj || !pais || !estado || !cidade) {
-        return res.status(403).send("dados faltando")
+        return res.status(403).send({ message: "dados faltando" })
     }
     const { data, error } = await database
         .from('tb_hotel')
@@ -16,7 +16,10 @@ exports.post = async (req, res, next) => {
         })
         .select();
     if (error) {
-        return res.status(500).send(error)
+        if (error.code === '23505') {
+            return res.status(400).send({ status: '23505', message: 'CNPJ ja cadastrado' })
+        }
+        return res.status(400).send(error)
     } else {
         return res.status(200).send(data)
     }
@@ -71,7 +74,6 @@ exports.delete = async (req, res, next) => {
             return await reservaHospedeController.deleteReservas(reserva.id)
         })
         const reservasDeletadas = await Promise.all(deleteReservasPromise)
-        console.log(`reservasDeletadas`, reservasDeletadas)
         if (reservasDeletadas.includes(false)) {
             return res.status(500).send('erro ao apagar hotel')
         }

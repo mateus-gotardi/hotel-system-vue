@@ -1,14 +1,14 @@
 import type { AxiosInstance } from "axios";
 
 type ReservaBody = {
-    idhotel: string;
-    numeroreserva: string;
-    apartamento: string;
+    idhotel: string | number;
+    numeroreserva: string | number;
+    apartamento: string | number;
     datacheckin: string;
     datacheckout: string;
-    status: string;
-    hospedes: {
-        idhospede: string;
+    status: string | number;
+    hospedes?: {
+        idhospede: string | number;
         nome: string;
         sobrenome: string;
     }[]
@@ -21,8 +21,11 @@ export class Reservas {
     public async getAll<T = any>() {
         return this.http.get<T>(`/buscarReservaHospede`)
     }
+    public async getByHotel<T = any>(id: string) {
+        return this.http.get<T>(`/buscarReservaHospede/hotel/${id}`)
+    }
     public async getOne<T = any>(id: string) {
-        return this.http.get<T>(`/buscarReservaHospede:${id}`)
+        return this.http.get<T>(`/buscarReservaHospede/${id}`)
     }
     public async create<T = any>(body: ReservaBody) {
         return this.http.post<T>(`/cadastrarReservaHospede`, body)
@@ -31,6 +34,6 @@ export class Reservas {
         return this.http.put<T>(`/atualizarReservaHospede`, body)
     }
     public async deleteReserva<T = any>(id: string) {
-        return this.http.delete<T>(`/apagarReservaHospede:${id}`)
+        return this.http.delete<T>(`/apagarReservaHospede/${id}`)
     }
 }
