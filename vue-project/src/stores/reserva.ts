@@ -6,7 +6,8 @@ import type { AxiosResponse } from 'axios';
 export interface ReservasStoreState {
   reserva: Reserva,
   reservas: Reserva[],
-  reservaModal: boolean
+  reservaModal: boolean,
+  editMode: boolean
 }
 
 export const useReservaStore = defineStore('reservas', {
@@ -18,11 +19,12 @@ export const useReservaStore = defineStore('reservas', {
       datacheckout: '',
       hospedes: [],
       idhotel: -1,
-      numeroreserva: -1,
+      numeroreserva: '',
       status: '',
     },
     reservas: [],
-    reservaModal: false
+    reservaModal: false,
+    editMode: false,
   }),
   actions: {
     async fetchReservas(id?: string) {
@@ -52,7 +54,7 @@ export const useReservaStore = defineStore('reservas', {
         datacheckout: '',
         hospedes: [],
         idhotel: -1,
-        numeroreserva: -1,
+        numeroreserva: '',
         status: '',
       }
     },
@@ -75,6 +77,12 @@ export const useReservaStore = defineStore('reservas', {
       const hospedes = this.reserva.hospedes
       hospedes?.splice(index, 1);
       this.reserva.hospedes = hospedes
+    },
+    entrarModoEdicao() {
+      this.editMode = true
+    },
+    sairModoEdicao() {
+      this.editMode = false
     }
   }
 })

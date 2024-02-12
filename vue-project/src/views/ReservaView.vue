@@ -11,7 +11,10 @@
       </li>
     </ul>
     <div class="reservas-lista" v-if="hotelStore.hotel.id !== ''">
-      <div class="reservasHead"><button @click="reservaStore.abrirModal()">+</button></div>
+      <div class="reservasHead"><button @click="() => {
+        reservaStore.abrirModal()
+        reservaStore.sairModoEdicao()
+      }">+</button></div>
       <div v-for="(reserva, index) in reservaStore.reservas" :key="index" class="reserva-detalhes">
         <div class="reserva-buttons"></div>
         <button @click="selectReserva(reserva)">
@@ -72,7 +75,11 @@ export default defineComponent({
     },
     selectReserva(reserva: Reserva) {
       this.reservaStore.fetchReservaDetails(reserva.id)
+      this.reservaStore.entrarModoEdicao()
       this.reservaStore.abrirModal()
+    },
+    abrirNovaReserva() {
+
     }
   }
 })

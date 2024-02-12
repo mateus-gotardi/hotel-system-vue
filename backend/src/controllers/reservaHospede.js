@@ -1,8 +1,15 @@
 const database = require('../database/index');
 
 exports.createOrUpdate = async (req, res, next) => {
-    if (!req.body) {
-        return res.status(400).send('Invalid body')
+    if (!req.body || req.body.hospedes.length === 0) {
+        if (req.body.hospedes.length === 0) {
+            return res.status(400).send({ message: 'Reserva precisa ter pelo menos um hospede' })
+        }
+        return res.status(400).send({ message: 'requisição inválida' })
+    }
+    const dataExists = await dataExist('tb_reservas', req.body.numeroreserva, 'numeroreserva')
+    if (dataExists && req.method === 'POST' && req.url === '/cadastrarReservaHospede') {
+        return res.status(400).send({ message: 'reserva ja existe' })
     }
     const { idhotel, numeroreserva, apartamento, datacheckin, datacheckout, status, hospedes } = req.body
     if (!idhotel || !numeroreserva || !apartamento || !datacheckin || !status || !hospedes) {
@@ -27,13 +34,21 @@ exports.delete = async (req, res, next) => {
 };
 exports.getOne = async (req, res, next) => {
     let id = req.params.id;
+    if (!id) {
+        return res.status(404).send('Not Found');
+    }
     const resposta = await buscarReservaEHospedes(id)
-    res.status(200).send(resposta);
+    if (resposta) {
+        res.status(200).send(resposta);
+    } else {
+        res.status(400).send('erro');
+    }
 }
 exports.get = async (req, res, next) => {
     const { data: reservas } = await database
         .from('tb_reservas')
         .select()
+        .order('inserted_at', { ascending: false });
     res.status(200).send(reservas);
 }
 exports.getByHotel = async (req, res, next) => {
@@ -42,6 +57,8 @@ exports.getByHotel = async (req, res, next) => {
         .from('tb_reservas')
         .select()
         .eq('idhotel', id)
+        .order('inserted_at', { ascending: false });
+
     res.status(200).send(reservas);
 }
 
@@ -246,5 +263,6 @@ async function buscarReservaEHospedes(id) {
         }
     } catch (e) {
         console.log(e)
+        return false
     }
 }
