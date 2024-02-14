@@ -9,7 +9,8 @@ exports.createOrUpdate = async (req, res, next) => {
     }
     const dataExists = await dataExist('tb_reservas', req.body.numeroreserva, 'numeroreserva')
     if (dataExists && req.method === 'POST' && req.url === '/cadastrarReservaHospede') {
-        if (req.body.idhotel == dataExists.idhotel) {
+        const reservaExiste = dataExists.some((v) => v.idhotel === req.body.idhotel)
+        if (reservaExiste) {
             return res.status(400).send({ message: 'reserva ja existe' })
         }
     }
