@@ -3,23 +3,23 @@
         <h1>Registrar Hotel</h1>
         <div class="inputContainer">
             <label for="name">Nome</label>
-            <input required type="text" placeholder="Nome" v-model="nome" />
+            <input required type="text" placeholder="Nome" id="name" v-model="nome" />
         </div>
         <div class="inputContainer">
             <label for="cnpj">CNPJ</label>
-            <input required type="cnpj" placeholder="cnpj" v-model="cnpj" />
+            <input required type="cnpj" placeholder="cnpj" id="cnpj" v-model="cnpj" />
         </div>
         <div class="inputContainer">
             <label for="pais">Pais</label>
-            <input required type="text" placeholder="Pais" v-model="pais" />
+            <input required type="text" placeholder="Pais" id="pais" v-model="pais" />
         </div>
         <div class="inputContainer">
             <label for="estado">Estado</label>
-            <input required type="text" placeholder="Estado" v-model="estado" />
+            <input required type="text" placeholder="Estado" id="estado" v-model="estado" />
         </div>
         <div class="inputContainer">
-            <label for="pais">Cidade</label>
-            <input required type="text" placeholder="Cidade" v-model="cidade" />
+            <label for="cidade">Cidade</label>
+            <input required type="text" placeholder="Cidade" id="cidade" v-model="cidade" />
         </div>
         <p class="error" v-if="error !== ''">{{ error }}</p>
         <div class="buttonContainer">

@@ -1,15 +1,17 @@
 const database = require('../database/index');
 
 exports.createOrUpdate = async (req, res, next) => {
-    if (!req.body || req.body.hospedes.length === 0) {
-        if (req.body.hospedes.length === 0) {
-            return res.status(400).send({ message: 'Reserva precisa ter pelo menos um hospede' })
-        }
+    if (!req.body) {
         return res.status(400).send({ message: 'requisição inválida' })
+    }
+    if (req.body.hospedes.length === 0) {
+        return res.status(400).send({ message: 'Reserva precisa ter pelo menos um hospede' })
     }
     const dataExists = await dataExist('tb_reservas', req.body.numeroreserva, 'numeroreserva')
     if (dataExists && req.method === 'POST' && req.url === '/cadastrarReservaHospede') {
-        return res.status(400).send({ message: 'reserva ja existe' })
+        if (req.body.idhotel == dataExists.idhotel) {
+            return res.status(400).send({ message: 'reserva ja existe' })
+        }
     }
     const { idhotel, numeroreserva, apartamento, datacheckin, datacheckout, status, hospedes } = req.body
     if (!idhotel || !numeroreserva || !apartamento || !datacheckin || !status || !hospedes) {
@@ -144,7 +146,8 @@ async function atualizarOuCriarHospedes(hospede) {
 }
 
 async function atualizarOuCriarReserva(reserva) {
-    if (await dataExist('tb_reservas', reserva.numeroreserva, 'numeroreserva')) {
+    const dataExists = await dataExist('tb_reservas', reserva.numeroreserva, 'numeroreserva')
+    if (dataExists && dataExists.idhotel === reserva.idhotel) {
         const { data, error } = await database
             .from('tb_reservas')
             .update(reserva)

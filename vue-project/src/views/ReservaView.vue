@@ -1,34 +1,40 @@
 <template>
-  <div class="container">
-    <h1>Cadastrar reserva</h1>
-    <h3 v-if="hotelStore.hotel.id !== ''">Hotel selecionado: {{ hotelStore.hotel.nome }}</h3>
-    <h3 v-if="hotelStore.hotel.id === ''">Escolher hotel</h3>
-    <ul class="hotel-list">
-      <li v-for="hotel in hotelStore.hoteis" :key="hotel.id" class="listItem">
-        <HotelListButton @click="handleSelect(hotel)">
-          {{ hotel.nome }} - {{ hotel.cidade }}, {{ hotel.pais }}
-        </HotelListButton>
-      </li>
-    </ul>
-    <div class="reservas-lista" v-if="hotelStore.hotel.id !== ''">
-      <div class="reservasHead"><button @click="() => {
-        reservaStore.abrirModal()
-        reservaStore.sairModoEdicao()
-      }">+</button></div>
-      <div v-for="(reserva, index) in reservaStore.reservas" :key="index" class="reserva-detalhes">
-        <div class="reserva-buttons"></div>
-        <button @click="selectReserva(reserva)">
-          Editar
-        </button>
-        <button>
-          Apagar
-        </button>
-        <p>numero reserva: {{ reserva.numeroreserva }}</p>
-        <p>status: {{ reserva.status }}</p>
-        <p>apartamento: {{ reserva.apartamento }}</p>
-        <p>check in: {{ reserva.datacheckin }}</p>
-        <p v-if="reserva.datacheckout && reserva.datacheckout !== ''">check out: {{ reserva.datacheckout }}</p>
-        <p v-if="hotelStore.hotel.id == ''">Hotel: {{ reserva.idhotel }}</p>
+  <div class="reservas-container">
+    <div class="top">
+      <h4 v-if="hotelStore.hotel.id !== ''">Hotel selecionado: {{ hotelStore.hotel.nome }}</h4>
+      <h4 v-if="hotelStore.hotel.id === ''">Escolher hotel</h4>
+      <ul class="hotel-list">
+        <li v-for="hotel in hotelStore.hoteis" :key="hotel.id" class="listItem">
+          <HotelListButton @click="handleSelect(hotel)" :selecionado="hotel.id === hotelStore.hotel.id">
+            {{ hotel.nome }} - {{ hotel.cidade }}, {{ hotel.pais }}
+          </HotelListButton>
+        </li>
+      </ul>
+    </div>
+    <div class="reservas">
+      <div class="reservas-head">
+        <button @click="() => {
+          reservaStore.abrirModal()
+          reservaStore.sairModoEdicao()
+        }">Criar Reserva</button>
+      </div>
+      <div class="reservas-lista">
+        <div v-for="(reserva, index) in reservaStore.reservas" :key="index" class="reserva-detalhes">
+          <div class="reserva-buttons">
+            <button @click="selectReserva(reserva)">
+              Editar
+            </button>
+            <button>
+              Apagar
+            </button>
+          </div>
+          <p>Numero reserva: {{ reserva.numeroreserva }}</p>
+          <p v-if="hotelStore.hotel.id === ''">Hotel: {{ nomeDoHotel(reserva.idhotel.toString()) }}</p>
+          <p>Status: {{ reserva.status }}</p>
+          <p>Apartamento: {{ reserva.apartamento }}</p>
+          <p>Check in: {{ reserva.datacheckin }}</p>
+          <p v-if="reserva.datacheckout && reserva.datacheckout !== ''">Check out: {{ reserva.datacheckout }}</p>
+        </div>
       </div>
     </div>
     <FormularioReserva v-if="reservaStore.reservaModal" />
@@ -36,8 +42,8 @@
 </template>
 <script lang="ts">
 import type { IHotel } from '@/types/hotel';
-import { defineComponent } from 'vue'
-import HotelListButton from '../components/HotelListButton.vue'
+import { defineComponent } from 'vue';
+import HotelListButton from '../components/HotelListButton.vue';
 import { useHotelStore } from '@/stores/hotel';
 import FormularioReserva from '@/components/FormularioReserva.vue';
 import { useReservaStore } from '@/stores/reserva';
@@ -60,7 +66,11 @@ export default defineComponent({
   },
   mounted() {
     this.hotelStore.fetchHoteis()
-    this.reservaStore.fetchReservas()
+    if (this.hotelStore.hotel.id === '') {
+      this.reservaStore.fetchReservas()
+    } else {
+      this.reservaStore.fetchReservas(this.hotelStore.hotel.id)
+    }
     this.reservaStore.fecharModal()
   },
   methods: {
@@ -74,12 +84,17 @@ export default defineComponent({
       this.reservaStore.fetchReservas(value.id)
     },
     selectReserva(reserva: Reserva) {
+      const hotel = this.hotelStore.hoteis.find((e) => e.id == reserva.idhotel.toString())
       this.reservaStore.fetchReservaDetails(reserva.id)
       this.reservaStore.entrarModoEdicao()
       this.reservaStore.abrirModal()
+      if (hotel) {
+        this.hotelStore.selectHotel(hotel)
+      }
     },
-    abrirNovaReserva() {
-
+    nomeDoHotel(id: string) {
+      const hotel = this.hotelStore.hoteis.find((e) => e.id == id)
+      return hotel?.nome
     }
   }
 })
@@ -87,23 +102,61 @@ export default defineComponent({
 </script>
   
 <style>
+.reserva-detalhes {
+  background-color: var(--color-background-soft);
+  padding: .7rem;
+  border-radius: .5rem;
+}
+
+.reserva-buttons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .5rem;
+}
+
 @media (min-width: 1024px) {
-  .container {
+  .reservas-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    padding: 1.5rem 0;
+    margin-left: 1rem;
   }
 
-  .listItem {
-    list-style-type: none;
+  .reservas-lista {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+
+  .reservas {
+    height: 100%;
+    width: 100%;
   }
 
   .hotel-list {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+    width: 100%;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0;
+    column-gap: .8rem;
+    row-gap: .5rem;
   }
+
+  .reservas-head {
+    margin: .5rem 0
+  }
+}
+
+.listItem {
+  list-style-type: none;
 }
 </style>
   

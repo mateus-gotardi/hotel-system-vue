@@ -5,17 +5,12 @@ import { RouterLink, RouterView } from 'vue-router'
 <template>
   <header>
     <!-- <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" /> -->
-
-    <div class="wrapper">
-      <nav>
-        <RouterLink to="/registrarHotel">Registrar Hotel</RouterLink>
-        <RouterLink to="/reservas">Reservas</RouterLink>
-      </nav>
-    </div>
+    <nav>
+      <RouterLink to="/registrarHotel">Registrar Hotel</RouterLink>
+      <RouterLink to="/reservas">Reservas</RouterLink>
+    </nav>
   </header>
-  <div class="container">
-    <RouterView />
-  </div>
+  <RouterView />
 </template>
 
 <style scoped>
@@ -67,8 +62,9 @@ nav a:first-of-type {
   header {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    min-width: 15vw;
+    justify-content: center;
+    width: 12rem;
+    height: 100vh;
   }
 
   .logo {
