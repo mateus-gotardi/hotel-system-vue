@@ -24,7 +24,7 @@
             <button @click="selectReserva(reserva)">
               Editar
             </button>
-            <button>
+            <button @click="apagarReserva(reserva.id.toString())">
               Apagar
             </button>
           </div>
@@ -48,6 +48,7 @@ import { useHotelStore } from '@/stores/hotel';
 import FormularioReserva from '@/components/FormularioReserva.vue';
 import { useReservaStore } from '@/stores/reserva';
 import type { Reserva } from '@/types/reserva';
+import api from '@/api';
 
 
 export default defineComponent({
@@ -82,6 +83,12 @@ export default defineComponent({
       }
       this.hotelStore.selectHotel(value)
       this.reservaStore.fetchReservas(value.id)
+    },
+    async apagarReserva(id: string) {
+      const response = await api.reservas.deleteReserva(id)
+      if (response.data.message == "Reserva apagada com sucesso") {
+        this.reservaStore.fetchReservas(this.hotelStore.hotel.id)
+      }
     },
     selectReserva(reserva: Reserva) {
       const hotel = this.hotelStore.hoteis.find((e) => e.id == reserva.idhotel.toString())

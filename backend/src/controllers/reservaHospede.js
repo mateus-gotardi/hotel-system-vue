@@ -30,9 +30,9 @@ exports.delete = async (req, res, next) => {
     let id = req.params.id;
     const deleteReserva = await this.deleteReservas(id)
     if (deleteReserva) {
-        res.status(200).send(`Reserva apagada com sucesso`);
+        res.status(200).send({ message: `Reserva apagada com sucesso` });
     } else {
-        res.status(400).send('erro ao apagar')
+        res.status(400).send({ message: 'erro ao apagar' })
     }
 };
 exports.getOne = async (req, res, next) => {
