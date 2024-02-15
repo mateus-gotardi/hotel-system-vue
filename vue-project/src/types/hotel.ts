@@ -3,7 +3,8 @@ export type HotelBody = {
     cnpj: string
     estado: string
     cidade: string
-    pais: string
+    pais: string,
+    id?: string
 }
 export interface IHotel extends HotelBody {
     id: string;

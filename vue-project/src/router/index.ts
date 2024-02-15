@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import RegisterHotelView from '../views/RegisterHotelView.vue'
 import NotFound from '../components/NotFound.vue'
 import ReservaView from '@/views/ReservaView.vue'
+import AdmHotelViewVue from '@/views/AdmHotelView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -17,6 +18,11 @@ const router = createRouter({
       name: 'register',
       component: RegisterHotelView,
 
+    },
+    {
+      path: '/hoteis',
+      name: 'hoteis',
+      component: AdmHotelViewVue
     },
     {
       path: '/reservas',

@@ -6,6 +6,7 @@ import type { AxiosResponse } from 'axios';
 export interface HotelStoreState {
   hotel: IHotel;
   hoteis: IHotel[];
+  editMode: boolean;
 }
 
 export const useHotelStore = defineStore('hotel', {
@@ -19,6 +20,7 @@ export const useHotelStore = defineStore('hotel', {
       pais: '',
     },
     hoteis: [],
+    editMode: false
   }),
   actions: {
     async fetchHoteis() {
@@ -39,6 +41,12 @@ export const useHotelStore = defineStore('hotel', {
         pais: '',
       };
     },
+    openEdit() {
+      this.editMode = true;
+    },
+    closeEdit() {
+      this.editMode = false;
+    }
   }
 })
 

@@ -1,4 +1,5 @@
 const database = require('../database/index');
+const { validarCNPJ } = require('../utils');
 const reservaHospedeController = require('./reservaHospede')
 
 exports.post = async (req, res, next) => {
@@ -6,6 +7,9 @@ exports.post = async (req, res, next) => {
         return res.status(400).send('Invalid body')
     }
     const { nome, cnpj, pais, estado, cidade } = req.body
+    if (!validarCNPJ(cnpj)) {
+        return res.status(403).send({ message: "CNPJ inválido" })
+    }
     if (!nome || !cnpj || !pais || !estado || !cidade) {
         return res.status(403).send({ message: "dados faltando" })
     }
@@ -41,13 +45,16 @@ exports.get = async (req, res, next) => {
     return res.status(200).send(data)
 }
 exports.put = async (req, res, next) => {
-    let id = req.params.id;
+    let id = req.body.id;
     if (!req.body) {
-        return res.status(400).send('Invalid body')
+        return res.status(400).send({ message: 'Dados inválidos' })
     }
     const { nome, cnpj, pais, estado, cidade } = req.body
+    if (!validarCNPJ(cnpj)) {
+        return res.status(403).send({ message: "CNPJ inválido" })
+    }
     if (!nome || !cnpj || !pais || !estado || !cidade) {
-        return res.status(403).send("dados faltando")
+        return res.status(403).send({ message: "Dados faltando" })
     }
     const { data, error } = await database
         .from('tb_hotel')
@@ -59,7 +66,7 @@ exports.put = async (req, res, next) => {
     if (error) {
         return res.status(500).send(error)
     } else {
-        return res.status(200).send(data)
+        return res.status(200).send({ message: 'hotel editado com sucesso' })
     }
 };
 exports.delete = async (req, res, next) => {
@@ -75,7 +82,7 @@ exports.delete = async (req, res, next) => {
         })
         const reservasDeletadas = await Promise.all(deleteReservasPromise)
         if (reservasDeletadas.includes(false)) {
-            return res.status(500).send('erro ao apagar hotel')
+            return res.status(500).send({ message: 'erro ao apagar hotel' })
         }
     } catch (e) {
         console.log(e)
@@ -87,7 +94,7 @@ exports.delete = async (req, res, next) => {
         if (error) {
             return res.status(500).send(error)
         } else {
-            return res.status(200).send('hotel excluido com sucesso')
+            return res.status(200).send({ message: 'hotel excluido com sucesso' })
         }
     }
 };

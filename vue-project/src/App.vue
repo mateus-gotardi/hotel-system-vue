@@ -4,10 +4,10 @@ import { RouterLink, RouterView } from 'vue-router'
 
 <template>
   <header>
-    <!-- <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" /> -->
     <nav>
-      <RouterLink to="/registrarHotel">Registrar Hotel</RouterLink>
+      <RouterLink to="/registrarHotel">Registrar hotel</RouterLink>
       <RouterLink to="/reservas">Reservas</RouterLink>
+      <RouterLink to="/hoteis">Hoteis</RouterLink>
     </nav>
   </header>
   <RouterView />
@@ -63,8 +63,9 @@ nav a:first-of-type {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 12rem;
     height: 100vh;
+    width: 10vw;
+    min-width: 12rem;
   }
 
   .logo {

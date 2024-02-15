@@ -251,19 +251,21 @@ async function buscarReservaEHospedes(id) {
     try {
         const reservas_hospedes = await dataExist('reserva_hospede', id, 'idreserva')
         const reserva = await dataExist('tb_reservas', id, 'id');
-        let hospedesPromises = reservas_hospedes.map(async (relation) => {
-            let hospede = await dataExist('tb_hospedes', relation.idhospede, 'idhospede')
-            return ({ idhospede: hospede[0].idhospede, nome: hospede[0].nome, sobrenome: hospede[0].sobrenome })
-        })
-        const hospedes = await Promise.all(hospedesPromises)
-        return {
-            idhotel: reserva[0].idhotel,
-            numeroreserva: parseInt(reserva[0].numeroreserva) || reserva[0].numeroreserva,
-            apartamento: parseInt(reserva[0].apartamento) || reserva[0].apartamento,
-            datacheckin: reserva[0].datacheckin,
-            datacheckout: reserva[0].datacheckout,
-            status: parseInt(reserva[0].status) || reserva[0].status,
-            hospedes: hospedes,
+        if (reservas_hospedes.length > 0) {
+            let hospedesPromises = reservas_hospedes.map(async (relation) => {
+                let hospede = await dataExist('tb_hospedes', relation.idhospede, 'idhospede')
+                return ({ idhospede: hospede[0].idhospede, nome: hospede[0].nome, sobrenome: hospede[0].sobrenome })
+            })
+            const hospedes = await Promise.all(hospedesPromises)
+            return {
+                idhotel: reserva[0].idhotel,
+                numeroreserva: parseInt(reserva[0].numeroreserva) || reserva[0].numeroreserva,
+                apartamento: parseInt(reserva[0].apartamento) || reserva[0].apartamento,
+                datacheckin: reserva[0].datacheckin,
+                datacheckout: reserva[0].datacheckout,
+                status: parseInt(reserva[0].status) || reserva[0].status,
+                hospedes: hospedes,
+            }
         }
     } catch (e) {
         console.log(e)

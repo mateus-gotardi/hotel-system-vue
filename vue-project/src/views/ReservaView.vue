@@ -43,7 +43,7 @@
 <script lang="ts">
 import type { IHotel } from '@/types/hotel';
 import { defineComponent } from 'vue';
-import HotelListButton from '../components/HotelListButton.vue';
+import HotelListButton from '../components/HotelListButton.vue'
 import { useHotelStore } from '@/stores/hotel';
 import FormularioReserva from '@/components/FormularioReserva.vue';
 import { useReservaStore } from '@/stores/reserva';
@@ -67,6 +67,7 @@ export default defineComponent({
   },
   mounted() {
     this.hotelStore.fetchHoteis()
+    this.hotelStore.deselectHotel()
     if (this.hotelStore.hotel.id === '') {
       this.reservaStore.fetchReservas()
     } else {
@@ -113,6 +114,9 @@ export default defineComponent({
   background-color: var(--color-background-soft);
   padding: .7rem;
   border-radius: .5rem;
+  -webkit-box-shadow: 2px 2px 5px 0px rgba(201, 201, 201, 1);
+  -moz-box-shadow: 2px 2px 5px 0px rgba(201, 201, 201, 1);
+  box-shadow: 2px 2px 5px 0px rgba(201, 201, 201, 1);
 }
 
 .reserva-buttons {
@@ -131,6 +135,7 @@ export default defineComponent({
     justify-content: space-between;
     padding: 1.5rem 0;
     margin-left: 1rem;
+    width: 90vw;
   }
 
   .reservas-lista {
